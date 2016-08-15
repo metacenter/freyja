@@ -1,0 +1,7 @@
+[package]
+name = "freyja"
+version = "0.1.0"
+authors = ["Wojciech Kluczka <wojciech.kluczka@gmail.com>"]
+
+[dependencies]
+dbus = "0.3.4"
