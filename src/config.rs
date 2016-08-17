@@ -2,7 +2,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-use std::collections::LinkedList;
 use std::error::Error;
 use rustc_serialize::json;
 
@@ -10,17 +9,18 @@ use rustc_serialize::json;
 
 pub trait ConfigReader {
     /// Return command assigned to given alias if found, `None` otherwise.
-    fn get_command_for_alias(&self, alias: &String) -> Option<String>;
+    fn get_command_for_alias(&self, alias: &String) -> Option<Entry>;
 }
 
 //------------------------------------------------------------------------------
 
 /// Helper structure for binding command to alias
 /// and decoding JSON configuration.
-#[derive(RustcDecodable)]
-struct Entry {
-    alias: String,
-    command: String,
+#[derive(RustcDecodable,Clone)]
+pub struct Entry {
+    alias:       String,
+    pub command: String,
+    pub args:    Vec<String>,
 }
 
 //------------------------------------------------------------------------------
@@ -33,10 +33,10 @@ struct Configuration {
 
 //------------------------------------------------------------------------------
 
-/// This class represents configuration. Allows to read from configuration file
-/// and access settings.
+/// This class represents configuration. Stores and provides access
+/// to data read from configuration file.
 pub struct Config {
-    entry_list: LinkedList<Entry>,
+    entries: Vec<Entry>,
 }
 
 //------------------------------------------------------------------------------
@@ -44,7 +44,7 @@ pub struct Config {
 impl Config {
     /// Constructor.
     pub fn new() -> Self {
-        Config { entry_list : LinkedList::new() }
+        Config { entries : Vec::new() }
     }
 
     /// Initialize configuration.
@@ -61,19 +61,19 @@ impl Config {
 
         // Copy entries
         for entry in decoded.bindings {
-            self.entry_list.push_front(entry);
+            self.entries.push(entry);
         };
-        Ok(self.entry_list.len())
+        Ok(self.entries.len())
     }
 }
 
 //------------------------------------------------------------------------------
 
 impl ConfigReader for Config {
-    fn get_command_for_alias(&self, alias: &String) -> Option<String> {
-        for entry in self.entry_list.iter() {
+    fn get_command_for_alias(&self, alias: &String) -> Option<Entry> {
+        for entry in self.entries.iter() {
             if &entry.alias == alias {
-                return Some(entry.command.clone());
+                return Some(entry.clone());
             }
         }
         None

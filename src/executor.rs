@@ -36,16 +36,21 @@ impl Exec for Executor {
         println!("Executing alias: '{}'", alias);
 
         // Get command for given alias from configuration.
-        let cmd = match config.get_command_for_alias(&alias) {
-            Some(cmd) => cmd,
+        let entry = match config.get_command_for_alias(&alias) {
+            Some(entry) => entry,
             None => {
                 println!("Alias was not configured!");
                 return false;
             },
         };
 
+        // Build command
+        let mut command = Command::new(entry.command);
+        for arg in entry.args {
+            command.arg(arg);
+        }
+
         // Execute command
-        let mut command = Command::new(cmd);
         match command.spawn() {
             Ok(_) => {
                 println!("'{}' spawned!", alias);
@@ -54,7 +59,7 @@ impl Exec for Executor {
             Err(why) => {
                 println!("Couldn't spawn! '{}'", why.description());
                 false
-            },
+            }
         }
     }
 }
