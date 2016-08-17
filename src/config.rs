@@ -3,6 +3,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 use std::collections::LinkedList;
+use std::error::Error;
+use rustc_serialize::json;
 
 //------------------------------------------------------------------------------
 
@@ -13,10 +15,20 @@ pub trait ConfigReader {
 
 //------------------------------------------------------------------------------
 
-/// Helper structure for binding command to alias.
+/// Helper structure for binding command to alias
+/// and decoding JSON configuration.
+#[derive(RustcDecodable)]
 struct Entry {
     alias: String,
     command: String,
+}
+
+//------------------------------------------------------------------------------
+
+/// Helper structure for decoding JSON configuration.
+#[derive(RustcDecodable)]
+struct Configuration {
+    bindings: Vec<Entry>,
 }
 
 //------------------------------------------------------------------------------
@@ -32,22 +44,26 @@ pub struct Config {
 impl Config {
     /// Constructor.
     pub fn new() -> Self {
-        Config {  entry_list : LinkedList::new() }
+        Config { entry_list : LinkedList::new() }
     }
 
     /// Initialize configuration.
-    /// Fills list with made up data.
-    /// TODO Implement reading configuration from file.
-    pub fn setup(&mut self) {
-        self.entry_list.push_front(Entry{alias:   String::from("opera"),
-                                         command: String::from("opera")});
-        self.entry_list.push_front(Entry{alias:   String::from("firefox"),
-                                         command: String::from("firefox")});
-    }
+    /// Return number of read entries on success or error description.
+    pub fn setup(&mut self, conf: String) -> Result<usize,String> {
+        // Decode received JSON string
+        let decoded: Configuration = match json::decode(&conf) {
+            Ok(decoded) => decoded,
+            Err(err) => {
+                return Err("Failed to parse configuration file: ".to_string() +
+                           err.description() );
+            },
+        };
 
-    /// Finalize configuration.
-    pub fn teardown(&mut self) {
-        // Nothing to do so far.
+        // Copy entries
+        for entry in decoded.bindings {
+            self.entry_list.push_front(entry);
+        };
+        Ok(self.entry_list.len())
     }
 }
 

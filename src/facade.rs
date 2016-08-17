@@ -26,7 +26,7 @@ const METHOD_QUIT : &'static str = "quit";
 fn handle_exec(msg: &Message,
                executor: &executor::Exec,
                config: &config::ConfigReader) -> bool {
-    println!("Exec requested");
+    println!("Execution requested");
     match msg.get1::<String>() {
         None        => false,
         Some(alias) => executor.exec(&alias, config),
@@ -79,7 +79,7 @@ impl Facade {
         let quit_method = factory.method(METHOD_QUIT, |m,_,_| {
                 println!("I was requested to quit!");
                 self.is_running.set(false);
-                Ok(vec!(m.method_return().append("exit")))
+                Ok(vec!(m.method_return().append("quiting...")))
             }).out_arg("s");
 
         // Build interface

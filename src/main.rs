@@ -3,8 +3,10 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 extern crate dbus;
+extern crate rustc_serialize;
 
 mod config;
+mod environment;
 mod executor;
 mod facade;
 mod freyja;

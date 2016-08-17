@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 use config;
+use environment;
 use executor;
 use facade;
 
@@ -11,9 +12,10 @@ use facade;
 /// This is main class of the application. Constructs and hods ownership to
 /// other parts.
 pub struct Freyja {
-    config:   config::Config,
-    executor: executor::Executor,
-    facade:   facade::Facade,
+    environment: environment::Environment,
+    config:      config::Config,
+    executor:    executor::Executor,
+    facade:      facade::Facade,
 }
 
 //------------------------------------------------------------------------------
@@ -21,16 +23,22 @@ pub struct Freyja {
 impl Freyja {
     /// Construct `Freyja` and contained structures.
     pub fn new() -> Self {
-        let config   = config::Config::new();
-        let executor = executor::Executor::new();
-        let facade   = facade::Facade::new();
-        Freyja { config : config, executor : executor, facade : facade }
+        let environment = environment::Environment::new();
+        let config      = config::Config::new();
+        let executor    = executor::Executor::new();
+        let facade      = facade::Facade::new();
+        Freyja { environment : environment,
+                 config      : config,
+                 executor    : executor,
+                 facade      : facade }
     }
 
     /// Execute the application.
     pub fn run(&mut self) {
-        self.config.setup();
-        self.facade.run(&self.executor, &self.config);
+        match self.config.setup(self.environment.get_config_file()) {
+            Ok(_) => self.facade.run(&self.executor, &self.config),
+            Err(err) => println!("{}", err),
+        }
     }
 }
 
@@ -38,7 +46,6 @@ impl Freyja {
 
 impl Drop for Freyja {
     fn drop(&mut self) {
-        self.config.teardown();
         println!("Bye!");
     }
 }
